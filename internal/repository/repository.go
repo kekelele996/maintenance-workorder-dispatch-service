@@ -56,7 +56,8 @@ func (r *Repository) FindByEquipment(equipmentID string) ([]*model.WorkOrder, er
 }
 
 func (r *Repository) List() ([]*model.WorkOrder, error) {
-	return r.store.ListOrders(), nil
+	orders := r.store.ListOrders()
+	return append([]*model.WorkOrder(nil), orders...), nil
 }
 
 func (r *Repository) Update(id string, fn func(*model.WorkOrder)) (*model.WorkOrder, error) {

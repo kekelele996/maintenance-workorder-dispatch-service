@@ -30,23 +30,7 @@ func New() *Store {
 	}
 }
 
-func cloneOrder(o *model.WorkOrder) *model.WorkOrder {
-	if o == nil {
-		return nil
-	}
-	c := *o
-	return &c
-}
-
-func cloneTechnician(t *model.Technician) *model.Technician {
-	if t == nil {
-		return nil
-	}
-	c := *t
-	c.Skills = append([]string(nil), t.Skills...)
-	return &c
-}
-
+// PutOrder 写入工单；存储内部保存入参的副本，斩断与调用方的指针共享。
 func (s *Store) PutOrder(o *model.WorkOrder) error {
 	if o == nil || o.ID == "" {
 		return errors.New("invalid work order")
@@ -56,11 +40,12 @@ func (s *Store) PutOrder(o *model.WorkOrder) error {
 	if _, ok := s.orders[o.ID]; ok {
 		return ErrAlreadyExists
 	}
-	s.orders[o.ID] = cloneOrder(o)
+	s.orders[o.ID] = o.Clone()
 	s.orderIDs = append(s.orderIDs, o.ID)
 	return nil
 }
 
+// GetOrder 返回工单的深拷贝，调用方修改不影响存储内对象。
 func (s *Store) GetOrder(id string) (*model.WorkOrder, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -68,26 +53,29 @@ func (s *Store) GetOrder(id string) (*model.WorkOrder, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return o, nil
+	return o.Clone(), nil
 }
 
+// ListOrders 返回按插入顺序排列的工单副本切片，元素互不影响。
 func (s *Store) ListOrders() []*model.WorkOrder {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	out := make([]*model.WorkOrder, 0, len(s.orderIDs))
 	for _, id := range s.orderIDs {
-		out = append(out, s.orders[id])
+		out = append(out, s.orders[id].Clone())
 	}
 	return out
 }
 
+// OrderIDs 返回按插入顺序排列的工单 ID 副本。
 func (s *Store) OrderIDs() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.orderIDs
+	return append([]string(nil), s.orderIDs...)
 }
 
-// UpdateOrder 在锁内对工单执行原地修改，返回值是修改后的副本。
+// UpdateOrder 在锁内对工单执行原地修改，返回修改后的深拷贝。
+// 返回副本而非内部引用，避免调用方在锁外读写存储对象引发 data race。
 func (s *Store) UpdateOrder(id string, fn func(*model.WorkOrder)) (*model.WorkOrder, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -96,7 +84,7 @@ func (s *Store) UpdateOrder(id string, fn func(*model.WorkOrder)) (*model.WorkOr
 		return nil, ErrNotFound
 	}
 	fn(o)
-	return o, nil
+	return o.Clone(), nil
 }
 
 func (s *Store) Count() int {
@@ -105,6 +93,7 @@ func (s *Store) Count() int {
 	return len(s.orderIDs)
 }
 
+// PutTechnician 写入技工；存储内部保存入参的副本，Skills 使用独立底层数组。
 func (s *Store) PutTechnician(t *model.Technician) error {
 	if t == nil || t.ID == "" {
 		return errors.New("invalid technician")
@@ -114,11 +103,12 @@ func (s *Store) PutTechnician(t *model.Technician) error {
 	if _, ok := s.technicians[t.ID]; ok {
 		return ErrAlreadyExists
 	}
-	s.technicians[t.ID] = cloneTechnician(t)
+	s.technicians[t.ID] = t.Clone()
 	s.techIDs = append(s.techIDs, t.ID)
 	return nil
 }
 
+// GetTechnician 返回技工的深拷贝，Skills 切片使用独立底层数组。
 func (s *Store) GetTechnician(id string) (*model.Technician, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -126,21 +116,23 @@ func (s *Store) GetTechnician(id string) (*model.Technician, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return t, nil
+	return t.Clone(), nil
 }
 
+// ListTechnicians 返回按插入顺序排列的技工副本切片。
 func (s *Store) ListTechnicians() []*model.Technician {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	out := make([]*model.Technician, 0, len(s.techIDs))
 	for _, id := range s.techIDs {
-		out = append(out, s.technicians[id])
+		out = append(out, s.technicians[id].Clone())
 	}
 	return out
 }
 
+// TechnicianIDs 返回按插入顺序排列的技工 ID 副本。
 func (s *Store) TechnicianIDs() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.techIDs
+	return append([]string(nil), s.techIDs...)
 }

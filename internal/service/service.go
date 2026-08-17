@@ -33,7 +33,9 @@ type Dispatcher interface {
 }
 
 // SkillDispatcher 是 Dispatcher 的默认实现，从路由表读取技能，缺省时补登记默认技能。
+// routes 可能被多个 worker goroutine 并发查询与补登记，因此用读写锁保护。
 type SkillDispatcher struct {
+	mu       sync.RWMutex
 	routes   map[string]string
 	fallback string
 }
@@ -48,6 +50,15 @@ func NewSkillDispatcher(routes map[string]string) *SkillDispatcher {
 
 func (d *SkillDispatcher) SkillFor(equipmentID string) string {
 	cat := util.EquipCategory(equipmentID)
+	d.mu.RLock()
+	if skill, ok := d.routes[cat]; ok {
+		d.mu.RUnlock()
+		return skill
+	}
+	d.mu.RUnlock()
+
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	if skill, ok := d.routes[cat]; ok {
 		return skill
 	}
@@ -236,6 +247,7 @@ func (s *Service) ActiveCount() int {
 	if len(orders) == 0 {
 		return 0
 	}
+
 	var wg sync.WaitGroup
 	var count atomic.Int64
 	step := (len(orders) + 3) / 4

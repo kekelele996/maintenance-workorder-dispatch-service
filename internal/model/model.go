@@ -90,3 +90,25 @@ func (t *Technician) HasSkill(skill string) bool {
 	}
 	return false
 }
+
+// Clone 返回工单的深拷贝。调用方拿到副本后任意修改都不会影响存储内的对象，
+// 避免跨层共享指针导致的 data race 与内部状态被改写。
+func (o *WorkOrder) Clone() *WorkOrder {
+	if o == nil {
+		return nil
+	}
+	c := *o
+	return &c
+}
+
+// Clone 返回技工的深拷贝，Skills 切片使用独立底层数组。
+func (t *Technician) Clone() *Technician {
+	if t == nil {
+		return nil
+	}
+	c := *t
+	if t.Skills != nil {
+		c.Skills = append([]string(nil), t.Skills...)
+	}
+	return &c
+}

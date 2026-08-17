@@ -3,7 +3,6 @@ package worker
 import (
 	"context"
 	"errors"
-	"sync"
 	"time"
 
 	"workorder/internal/model"
@@ -31,7 +30,8 @@ func New(repo *repository.Repository, exec Executor, pollInterval time.Duration)
 	return &Scheduler{repo: repo, exec: exec, pollInterval: pollInterval}
 }
 
-// Tick 执行一轮调度：先把失败且未超限的工单置为 retrying，再执行 retrying 工单。
+// Tick 执行一轮调度：先把失败且未超限的工单置为 retrying，再重新捞取 retrying 工单执行。
+// 第二轮重新读取快照，因为第一轮的 RetryOrder 会改写状态，旧快照里的副本不会随之更新。
 // 返回本轮重试与执行成功的数量。
 func (sch *Scheduler) Tick(ctx context.Context) (retried, executed int) {
 	if ctx.Err() != nil {
@@ -53,23 +53,18 @@ func (sch *Scheduler) Tick(ctx context.Context) (retried, executed int) {
 		}
 	}
 
+	// 第一轮可能改写了工单状态，重新拉取快照后再执行 retrying 工单。
 	orders, err = sch.repo.List()
 	if err != nil {
-		return retried, executed
+		return retried, 0
 	}
-	var wg sync.WaitGroup
 	for _, o := range orders {
 		if o.Status == model.StatusRetrying {
-			go func(id string) {
-				wg.Add(1)
-				defer wg.Done()
-				if _, err := sch.exec.ExecuteOrder(id); err == nil {
-					executed++
-				}
-			}(o.ID)
+			if _, err := sch.exec.ExecuteOrder(o.ID); err == nil {
+				executed++
+			}
 		}
 	}
-	wg.Wait()
 	return retried, executed
 }
 
