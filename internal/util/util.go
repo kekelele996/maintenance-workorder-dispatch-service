@@ -8,7 +8,7 @@ import (
 
 // FilterByStatus 返回状态等于 status 的工单子集，结果是新切片，不影响入参。
 func FilterByStatus(orders []*model.WorkOrder, status model.Status) []*model.WorkOrder {
-	out := orders[:0]
+	out := make([]*model.WorkOrder, 0, len(orders))
 	for _, o := range orders {
 		if o.Status == status {
 			out = append(out, o)
@@ -19,7 +19,7 @@ func FilterByStatus(orders []*model.WorkOrder, status model.Status) []*model.Wor
 
 // FilterActive 返回仍在处理中（未完成、未失败）的工单子集，结果是新切片。
 func FilterActive(orders []*model.WorkOrder) []*model.WorkOrder {
-	out := orders[:0]
+	out := make([]*model.WorkOrder, 0, len(orders))
 	for _, o := range orders {
 		if model.ActiveStatuses[o.Status] {
 			out = append(out, o)
