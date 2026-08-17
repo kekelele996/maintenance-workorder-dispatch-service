@@ -3,7 +3,6 @@ package worker
 import (
 	"context"
 	"errors"
-	"sync"
 	"time"
 
 	"workorder/internal/model"
@@ -57,19 +56,13 @@ func (sch *Scheduler) Tick(ctx context.Context) (retried, executed int) {
 	if err != nil {
 		return retried, executed
 	}
-	var wg sync.WaitGroup
 	for _, o := range orders {
 		if o.Status == model.StatusRetrying {
-			go func(id string) {
-				wg.Add(1)
-				defer wg.Done()
-				if _, err := sch.exec.ExecuteOrder(id); err == nil {
-					executed++
-				}
-			}(o.ID)
+			if _, err := sch.exec.ExecuteOrder(o.ID); err == nil {
+				executed++
+			}
 		}
 	}
-	wg.Wait()
 	return retried, executed
 }
 
