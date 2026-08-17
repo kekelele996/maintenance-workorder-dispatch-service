@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"workorder/internal/model"
@@ -46,7 +45,7 @@ func (sch *Scheduler) Tick(ctx context.Context) (retried, executed int) {
 			_, err := sch.exec.RetryOrder(o.ID)
 			if err == nil {
 				retried++
-			} else if errors.Is(err, service.ErrOrderNotFound) {
+			} else if err == service.ErrOrderNotFound {
 				continue
 			}
 		}

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 
@@ -76,7 +75,7 @@ func (s *Server) createOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	o, err := s.svc.CreateWorkOrder(req.EquipmentID, req.Title, model.Priority(req.Priority))
 	if err != nil {
-		if errors.Is(err, service.ErrValidation) {
+		if err == service.ErrValidation {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -88,14 +87,6 @@ func (s *Server) createOrder(w http.ResponseWriter, r *http.Request) {
 
 // writeOrderError 把 service 错误映射为 HTTP 状态码。
 func (s *Server) writeOrderError(w http.ResponseWriter, err error) {
-	if errors.Is(err, service.ErrOrderNotFound) {
-		writeError(w, http.StatusNotFound, "work order not found")
-		return
-	}
-	if errors.Is(err, service.ErrInvalidTransition) {
-		writeError(w, http.StatusConflict, err.Error())
-		return
-	}
 	writeError(w, http.StatusInternalServerError, "internal error")
 }
 

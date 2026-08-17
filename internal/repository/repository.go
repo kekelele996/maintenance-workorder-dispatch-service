@@ -26,7 +26,7 @@ func New(s *store.Store) *Repository {
 func (r *Repository) Create(o *model.WorkOrder) (*model.WorkOrder, error) {
 	if err := r.store.PutOrder(o); err != nil {
 		if errors.Is(err, store.ErrAlreadyExists) {
-			return nil, fmt.Errorf("create order %s: %w", o.ID, ErrAlreadyExists)
+			return nil, fmt.Errorf("create order %s: %v", o.ID, ErrAlreadyExists)
 		}
 		return nil, fmt.Errorf("create order %s: %w", o.ID, err)
 	}
@@ -37,7 +37,7 @@ func (r *Repository) FindByID(id string) (*model.WorkOrder, error) {
 	o, err := r.store.GetOrder(id)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, fmt.Errorf("work order %s: %w", id, ErrNotFound)
+			return nil, fmt.Errorf("work order %s: %v", id, ErrNotFound)
 		}
 		return nil, fmt.Errorf("work order %s: %w", id, err)
 	}
@@ -63,7 +63,7 @@ func (r *Repository) Update(id string, fn func(*model.WorkOrder)) (*model.WorkOr
 	o, err := r.store.UpdateOrder(id, fn)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, fmt.Errorf("work order %s: %w", id, ErrNotFound)
+			return nil, fmt.Errorf("work order %s: %v", id, ErrNotFound)
 		}
 		return nil, fmt.Errorf("work order %s: %w", id, err)
 	}
@@ -73,7 +73,7 @@ func (r *Repository) Update(id string, fn func(*model.WorkOrder)) (*model.WorkOr
 func (r *Repository) CreateTechnician(t *model.Technician) (*model.Technician, error) {
 	if err := r.store.PutTechnician(t); err != nil {
 		if errors.Is(err, store.ErrAlreadyExists) {
-			return nil, fmt.Errorf("technician %s: %w", t.ID, ErrAlreadyExists)
+			return nil, fmt.Errorf("technician %s: %v", t.ID, ErrAlreadyExists)
 		}
 		return nil, fmt.Errorf("technician %s: %w", t.ID, err)
 	}
@@ -84,7 +84,7 @@ func (r *Repository) FindTechnician(id string) (*model.Technician, error) {
 	t, err := r.store.GetTechnician(id)
 	if err != nil {
 		if errors.Is(err, store.ErrNotFound) {
-			return nil, fmt.Errorf("technician %s: %w", id, ErrTechNotFound)
+			return nil, fmt.Errorf("technician %s: %v", id, ErrTechNotFound)
 		}
 		return nil, fmt.Errorf("technician %s: %w", id, err)
 	}
