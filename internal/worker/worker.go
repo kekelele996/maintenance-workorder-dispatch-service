@@ -57,7 +57,7 @@ func (sch *Scheduler) Tick(ctx context.Context) (retried, executed int) {
 		return retried, executed
 	}
 	for _, o := range orders {
-		if o.Status == model.StatusFailed {
+		if o.Status == model.StatusRetrying {
 			if _, err := sch.exec.ExecuteOrder(o.ID); err == nil {
 				executed++
 			}

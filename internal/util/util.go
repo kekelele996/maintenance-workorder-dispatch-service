@@ -21,7 +21,7 @@ func FilterByStatus(orders []*model.WorkOrder, status model.Status) []*model.Wor
 func FilterActive(orders []*model.WorkOrder) []*model.WorkOrder {
 	out := make([]*model.WorkOrder, 0, len(orders))
 	for _, o := range orders {
-		if o.Status == model.StatusPending || o.Status == model.StatusAssigned || o.Status == model.StatusInProgress {
+		if model.ActiveStatuses[o.Status] {
 			out = append(out, o)
 		}
 	}

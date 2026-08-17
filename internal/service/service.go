@@ -208,7 +208,7 @@ func (s *Service) RetryOrder(orderID string) (*model.WorkOrder, error) {
 		return nil, fmt.Errorf("order %s from %s: %w", orderID, o.Status, ErrInvalidTransition)
 	}
 	return s.repo.Update(orderID, func(oo *model.WorkOrder) {
-		oo.Status = model.StatusFailed
+		oo.Status = model.StatusRetrying
 		oo.UpdatedAt = time.Now()
 	})
 }

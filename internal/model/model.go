@@ -25,10 +25,12 @@ const (
 )
 
 // ActiveStatuses 是「还在处理中」的状态集合，查询与统计会用到。
+// retrying 仍处于待重新执行的过程，归入活跃状态。
 var ActiveStatuses = map[Status]bool{
 	StatusPending:    true,
 	StatusAssigned:   true,
 	StatusInProgress: true,
+	StatusRetrying:   true,
 }
 
 // WorkOrder 是一张设备维保工单。
@@ -61,7 +63,7 @@ var transitions = map[Status][]Status{
 	StatusAssigned:   {StatusInProgress, StatusFailed},
 	StatusInProgress: {StatusCompleted, StatusFailed},
 	StatusFailed:     {StatusRetrying},
-	StatusRetrying:   {},
+	StatusRetrying:   {StatusInProgress, StatusFailed},
 	StatusCompleted:  {},
 }
 
