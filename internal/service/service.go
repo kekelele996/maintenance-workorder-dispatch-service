@@ -100,7 +100,7 @@ func (s *Service) CreateWorkOrder(equipmentID, title string, priority model.Prio
 func (s *Service) FindWorkOrder(id string) (*model.WorkOrder, error) {
 	o, err := s.repo.FindByID(id)
 	if err != nil {
-		if err == repository.ErrNotFound {
+		if errors.Is(err, repository.ErrNotFound) {
 			return nil, fmt.Errorf("work order %s: %w", id, ErrOrderNotFound)
 		}
 		return nil, fmt.Errorf("lookup work order %s: %w", id, err)
@@ -125,7 +125,7 @@ func (s *Service) ListWorkOrders(status *model.Status) ([]*model.WorkOrder, erro
 func (s *Service) DispatchOrder(orderID, techID string) (*model.WorkOrder, error) {
 	o, err := s.repo.FindByID(orderID)
 	if err != nil {
-		if err == repository.ErrNotFound {
+		if errors.Is(err, repository.ErrNotFound) {
 			return nil, fmt.Errorf("work order %s: %w", orderID, ErrOrderNotFound)
 		}
 		return nil, err
@@ -135,7 +135,7 @@ func (s *Service) DispatchOrder(orderID, techID string) (*model.WorkOrder, error
 	}
 	tech, err := s.repo.FindTechnician(techID)
 	if err != nil {
-		if err == repository.ErrTechNotFound {
+		if errors.Is(err, repository.ErrTechNotFound) {
 			return nil, fmt.Errorf("technician %s: %w", techID, ErrTechNotFound)
 		}
 		return nil, err
@@ -158,7 +158,7 @@ func (s *Service) DispatchOrder(orderID, techID string) (*model.WorkOrder, error
 func (s *Service) ExecuteOrder(orderID string) (*model.WorkOrder, error) {
 	o, err := s.repo.FindByID(orderID)
 	if err != nil {
-		if err == repository.ErrNotFound {
+		if errors.Is(err, repository.ErrNotFound) {
 			return nil, fmt.Errorf("work order %s: %w", orderID, ErrOrderNotFound)
 		}
 		return nil, err
@@ -199,7 +199,7 @@ func (s *Service) completeOrder(o *model.WorkOrder) (*model.WorkOrder, error) {
 func (s *Service) RetryOrder(orderID string) (*model.WorkOrder, error) {
 	o, err := s.repo.FindByID(orderID)
 	if err != nil {
-		if err == repository.ErrNotFound {
+		if errors.Is(err, repository.ErrNotFound) {
 			return nil, fmt.Errorf("work order %s: %w", orderID, ErrOrderNotFound)
 		}
 		return nil, err
