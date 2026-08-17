@@ -29,6 +29,7 @@ var ActiveStatuses = map[Status]bool{
 	StatusPending:    true,
 	StatusAssigned:   true,
 	StatusInProgress: true,
+	StatusRetrying:   true,
 }
 
 // WorkOrder 是一张设备维保工单。
@@ -61,7 +62,7 @@ var transitions = map[Status][]Status{
 	StatusAssigned:   {StatusInProgress, StatusFailed},
 	StatusInProgress: {StatusCompleted, StatusFailed},
 	StatusFailed:     {StatusRetrying},
-	StatusRetrying:   {},
+	StatusRetrying:   {StatusInProgress},
 	StatusCompleted:  {},
 }
 
