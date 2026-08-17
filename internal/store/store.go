@@ -68,7 +68,7 @@ func (s *Store) GetOrder(id string) (*model.WorkOrder, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return cloneOrder(o), nil
+	return o, nil
 }
 
 func (s *Store) ListOrders() []*model.WorkOrder {
@@ -76,7 +76,7 @@ func (s *Store) ListOrders() []*model.WorkOrder {
 	defer s.mu.RUnlock()
 	out := make([]*model.WorkOrder, 0, len(s.orderIDs))
 	for _, id := range s.orderIDs {
-		out = append(out, cloneOrder(s.orders[id]))
+		out = append(out, s.orders[id])
 	}
 	return out
 }
@@ -84,9 +84,7 @@ func (s *Store) ListOrders() []*model.WorkOrder {
 func (s *Store) OrderIDs() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	out := make([]string, len(s.orderIDs))
-	copy(out, s.orderIDs)
-	return out
+	return s.orderIDs
 }
 
 // UpdateOrder 在锁内对工单执行原地修改，返回值是修改后的副本。
@@ -98,7 +96,7 @@ func (s *Store) UpdateOrder(id string, fn func(*model.WorkOrder)) (*model.WorkOr
 		return nil, ErrNotFound
 	}
 	fn(o)
-	return cloneOrder(o), nil
+	return o, nil
 }
 
 func (s *Store) Count() int {
@@ -128,7 +126,7 @@ func (s *Store) GetTechnician(id string) (*model.Technician, error) {
 	if !ok {
 		return nil, ErrNotFound
 	}
-	return cloneTechnician(t), nil
+	return t, nil
 }
 
 func (s *Store) ListTechnicians() []*model.Technician {
@@ -136,7 +134,7 @@ func (s *Store) ListTechnicians() []*model.Technician {
 	defer s.mu.RUnlock()
 	out := make([]*model.Technician, 0, len(s.techIDs))
 	for _, id := range s.techIDs {
-		out = append(out, cloneTechnician(s.technicians[id]))
+		out = append(out, s.technicians[id])
 	}
 	return out
 }
@@ -144,7 +142,5 @@ func (s *Store) ListTechnicians() []*model.Technician {
 func (s *Store) TechnicianIDs() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	out := make([]string, len(s.techIDs))
-	copy(out, s.techIDs)
-	return out
+	return s.techIDs
 }
